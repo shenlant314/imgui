@@ -18,6 +18,7 @@ Index of this file:
 // [SECTION] Widgets: ColorEdit, ColorPicker, ColorButton, etc.
 // [SECTION] Widgets: TreeNode, CollapsingHeader, etc.
 // [SECTION] Widgets: Selectable
+// [SECTION] Widgets: Multi-Selection System
 // [SECTION] Widgets: ListBox
 // [SECTION] Widgets: PlotLines, PlotHistogram
 // [SECTION] Widgets: Value helpers
@@ -485,7 +486,8 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
     // Gamepad/Keyboard navigation
     // We report navigated item as hovered but we don't set g.HoveredId to not interfere with mouse.
     if (g.NavId == id && !g.NavDisableHighlight && g.NavDisableMouseHover && (g.ActiveId == 0 || g.ActiveId == id || g.ActiveId == window->MoveId))
-        hovered = true;
+        if (!(flags & ImGuiButtonFlags_NoHoveredOnNav))
+            hovered = true;
 
     if (g.NavActivateDownId == id)
     {
@@ -4815,7 +4817,7 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
     // - OpenOnDoubleClick .............. double-click anywhere to open
     // - OpenOnArrow .................... single-click on arrow to open
     // - OpenOnDoubleClick|OpenOnArrow .. single-click on arrow or double-click anywhere to open
-    ImGuiButtonFlags button_flags = ImGuiButtonFlags_NoKeyModifiers;
+    ImGuiButtonFlags button_flags = 0;
     if (flags & ImGuiTreeNodeFlags_AllowItemOverlap)
         button_flags |= ImGuiButtonFlags_AllowItemOverlap;
     if (flags & ImGuiTreeNodeFlags_OpenOnDoubleClick)
@@ -4824,6 +4826,28 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
         button_flags |= ImGuiButtonFlags_PressedOnDragDropHold;
 
     bool selected = (flags & ImGuiTreeNodeFlags_Selected) != 0;
+    const bool was_selected = selected;
+
+    // Multi-selection support (header)
+    const bool is_multi_select = (g.MultiSelectScopeWindow == window);
+    if (is_multi_select)
+    {
+        flags |= ImGuiTreeNodeFlags_OpenOnArrow;
+        MultiSelectItemHeader(id, &selected);
+        button_flags |= ImGuiButtonFlags_NoHoveredOnNav;
+
+        // To handle drag and drop of multiple items we need to avoid clearing selection on click.
+        // Enabling this test makes actions using CTRL+SHIFT delay their effect on the mouse release which is annoying, but it allows drag and drop of multiple items.
+        if (!selected || (g.ActiveId == id && g.ActiveIdHasBeenPressed))
+            button_flags |= ImGuiButtonFlags_PressedOnClick;
+        else
+            button_flags |= ImGuiButtonFlags_PressedOnClickRelease;
+    }
+    else
+    {
+        button_flags |= ImGuiButtonFlags_NoKeyModifiers;
+    }
+
     bool hovered, held;
     bool pressed = ButtonBehavior(interact_bb, id, &hovered, &held, button_flags);
     bool toggled = false;
@@ -4831,7 +4855,7 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
     {
         if (pressed)
         {
-            toggled = !(flags & (ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick)) || (g.NavActivateId == id);
+            toggled = !(flags & (ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick)) || (g.NavActivateId == id && !is_multi_select);
             if (flags & ImGuiTreeNodeFlags_OpenOnArrow)
                 toggled |= IsMouseHoveringRect(interact_bb.Min, ImVec2(interact_bb.Min.x + text_offset_x, interact_bb.Max.y)) && (!g.NavDisableMouseHover);
             if (flags & ImGuiTreeNodeFlags_OpenOnDoubleClick)
@@ -4857,13 +4881,27 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
             window->DC.StateStorage->SetInt(id, is_open);
         }
     }
+
+    // Multi-selection support (footer)
+    if (is_multi_select)
+    {
+        bool pressed_copy = pressed && !toggled;
+        MultiSelectItemFooter(id, &selected, &pressed_copy);
+        if (pressed)
+            SetNavID(id, window->DC.NavLayerCurrent);
+    }
+
     if (flags & ImGuiTreeNodeFlags_AllowItemOverlap)
         SetItemAllowOverlap();
+    if (selected != was_selected)
+        window->DC.LastItemStatusFlags |= ImGuiItemStatusFlags_ToggledSelection;
 
     // Render
     const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
     const ImVec2 text_pos = frame_bb.Min + ImVec2(text_offset_x, text_base_offset_y);
     ImGuiNavHighlightFlags nav_highlight_flags = ImGuiNavHighlightFlags_TypeThin;
+    if (is_multi_select)
+        nav_highlight_flags |= ImGuiNavHighlightFlags_AlwaysDraw; // Always show the nav rectangle
     if (display_frame)
     {
         // Framed type
@@ -4888,10 +4926,8 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
     {
         // Unframed typed for tree nodes
         if (hovered || selected)
-        {
             RenderFrame(frame_bb.Min, frame_bb.Max, col, false);
-            RenderNavHighlight(frame_bb, id, nav_highlight_flags);
-        }
+        RenderNavHighlight(frame_bb, id, nav_highlight_flags);
 
         if (flags & ImGuiTreeNodeFlags_Bullet)
             RenderBullet(frame_bb.Min + ImVec2(text_offset_x * 0.5f, g.FontSize*0.50f + text_base_offset_y));
@@ -5047,15 +5083,15 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
     if (size_arg.x == 0.0f || (flags & ImGuiSelectableFlags_DrawFillAvailWidth))
         bb.Max.x += window_padding.x;
 
-    // Selectables are tightly packed together, we extend the box to cover spacing between selectable.
-    float spacing_L = (float)(int)(style.ItemSpacing.x * 0.5f);
-    float spacing_U = (float)(int)(style.ItemSpacing.y * 0.5f);
-    float spacing_R = style.ItemSpacing.x - spacing_L;
-    float spacing_D = style.ItemSpacing.y - spacing_U;
+    // Selectables are tightly packed together so we extend the box to cover spacing between selectable.
+    float spacing_x = ImMax(style.ItemSpacing.x - style.SelectableSpacing.x, 0.0f);
+    float spacing_y = ImMax(style.ItemSpacing.y - style.SelectableSpacing.y, 0.0f);
+    float spacing_L = (float)(int)(spacing_x * 0.50f);
+    float spacing_U = (float)(int)(spacing_y * 0.50f);
     bb.Min.x -= spacing_L;
     bb.Min.y -= spacing_U;
-    bb.Max.x += spacing_R;
-    bb.Max.y += spacing_D;
+    bb.Max.x += (spacing_x - spacing_L);
+    bb.Max.y += (spacing_y - spacing_U);
     if (!ItemAdd(bb, id))
     {
         if ((flags & ImGuiSelectableFlags_SpanAllColumns) && window->DC.ColumnsSet)
@@ -5073,10 +5109,31 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
     if (flags & ImGuiSelectableFlags_Disabled)
         selected = false;
 
+    // Multi-selection support (header)
+    const bool is_multi_select = (g.MultiSelectScopeWindow == window);
+    const bool was_selected = selected;
+    if (is_multi_select)
+    {
+        MultiSelectItemHeader(id, &selected);
+        button_flags |= ImGuiButtonFlags_NoHoveredOnNav;
+
+        // To handle drag and drop of multiple items we need to avoid clearing selection on click.
+        // Enabling this test makes actions using CTRL+SHIFT delay their effect on the mouse release which is annoying, but it allows drag and drop of multiple items.
+        if (!selected || (g.ActiveId == id && g.ActiveIdHasBeenPressed))
+            button_flags |= ImGuiButtonFlags_PressedOnClick;
+        else
+            button_flags |= ImGuiButtonFlags_PressedOnClickRelease;
+    }
+
     bool hovered, held;
     bool pressed = ButtonBehavior(bb, id, &hovered, &held, button_flags);
+
+    // Multi-selection support (footer)
+    if (is_multi_select)
+        MultiSelectItemFooter(id, &selected, &pressed);
+
     // Hovering selectable with mouse updates NavId accordingly so navigation can be resumed with gamepad/keyboard (this doesn't happen on most widgets)
-    if (pressed || hovered)
+    if (pressed || (hovered && !is_multi_select))
         if (!g.NavDisableMouseHover && g.NavWindow == window && g.NavLayer == window->DC.NavLayerCurrent)
         {
             g.NavDisableHighlight = true;
@@ -5088,10 +5145,18 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
     // Render
     if (hovered || selected)
     {
-        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
+        // FIXME-MULTISELECT, FIXME-STYLE: Color for 'selected' elements? ImGuiCol_HeaderSelected
+        ImU32 col;
+        if (selected && !hovered)
+            col = GetColorU32(ImLerp(GetStyleColorVec4(ImGuiCol_Header), GetStyleColorVec4(ImGuiCol_HeaderHovered), 0.5f));
+        else
+            col = GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : (hovered) ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
         RenderFrame(bb.Min, bb.Max, col, false, 0.0f);
-        RenderNavHighlight(bb, id, ImGuiNavHighlightFlags_TypeThin | ImGuiNavHighlightFlags_NoRounding);
     }
+    ImGuiNavHighlightFlags nav_highlight_flags = ImGuiNavHighlightFlags_TypeThin | ImGuiNavHighlightFlags_NoRounding;
+    if (is_multi_select)
+        nav_highlight_flags |= ImGuiNavHighlightFlags_AlwaysDraw; // Always show the nav rectangle
+    RenderNavHighlight(bb, id, nav_highlight_flags);
 
     if ((flags & ImGuiSelectableFlags_SpanAllColumns) && window->DC.ColumnsSet)
     {
@@ -5106,7 +5171,11 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
     // Automatically close popups
     if (pressed && (window->Flags & ImGuiWindowFlags_Popup) && !(flags & ImGuiSelectableFlags_DontClosePopups) && !(window->DC.ItemFlags & ImGuiItemFlags_SelectableDontClosePopup))
         CloseCurrentPopup();
-    return pressed;
+
+    if (selected != was_selected)
+        window->DC.LastItemStatusFlags |= ImGuiItemStatusFlags_ToggledSelection;
+
+    return pressed || (was_selected != selected);
 }
 
 bool ImGui::Selectable(const char* label, bool* p_selected, ImGuiSelectableFlags flags, const ImVec2& size_arg)
@@ -5117,6 +5186,227 @@ bool ImGui::Selectable(const char* label, bool* p_selected, ImGuiSelectableFlags
         return true;
     }
     return false;
+}
+
+//-------------------------------------------------------------------------
+// [SECTION] Widgets: Multi-Selection System
+//-------------------------------------------------------------------------
+// - BeginMultiSelect()
+// - EndMultiSelect()
+// - SetNextItemMultiSelectData()
+// - MultiSelectItemHeader() [Internal]
+// - MultiSelectItemFooter() [Internal]
+//-------------------------------------------------------------------------
+
+ImGuiMultiSelectData* ImGui::BeginMultiSelect(ImGuiMultiSelectFlags flags, void* range_ref, bool range_ref_is_selected)
+{
+    ImGuiContext& g = *ImGui::GetCurrentContext();
+    ImGuiWindow* window = g.CurrentWindow;
+
+    IM_ASSERT(g.MultiSelectScopeId == 0);    // No recursion allowed yet (we could allow it if we deem it useful)
+    IM_ASSERT(g.MultiSelectFlags == 0);
+
+    ImGuiMultiSelectState* state = &g.MultiSelectState;
+    g.MultiSelectScopeId = window->IDStack.back();
+    g.MultiSelectScopeWindow = window;
+    g.MultiSelectFlags = flags;
+    state->Clear();
+
+    if ((flags & ImGuiMultiSelectFlags_NoMultiSelect) == 0)
+    {
+        state->In.RangeSrc = state->Out.RangeSrc = range_ref;
+        state->In.RangeValue = state->Out.RangeValue = range_ref_is_selected;
+    }
+
+    // Auto clear when using Navigation to move within the selection (we compare SelectScopeId so it possible to use multiple lists inside a same window)
+    if (g.NavJustMovedToId != 0 && g.NavJustMovedToSelectScopeId == g.MultiSelectScopeId)
+    {
+        if (g.IO.KeyShift)
+            state->InRequestSetRangeNav = true;
+        if (!g.IO.KeyCtrl && !g.IO.KeyShift)
+            state->In.RequestClear = true;
+    }
+
+    // Select All helper shortcut
+    if (!(flags & ImGuiMultiSelectFlags_NoMultiSelect) && !(flags & ImGuiMultiSelectFlags_NoSelectAll))
+        if (IsWindowFocused() && g.IO.KeyCtrl && IsKeyPressed(GetKeyIndex(ImGuiKey_A)))
+            state->In.RequestSelectAll = true;
+
+#if IMGUI_DEBUG_MULTISELECT
+    if (state->In.RequestClear)     printf("[%05d] BeginMultiSelect: RequestClear\n", g.FrameCount);
+    if (state->In.RequestSelectAll) printf("[%05d] BeginMultiSelect: RequestSelectAll\n", g.FrameCount);
+#endif
+
+    return &state->In;
+}
+
+ImGuiMultiSelectData* ImGui::EndMultiSelect()
+{
+    ImGuiContext& g = *ImGui::GetCurrentContext();
+    ImGuiMultiSelectState* state = &g.MultiSelectState;
+    IM_ASSERT(g.MultiSelectScopeId != 0);
+    if (g.MultiSelectFlags & ImGuiMultiSelectFlags_NoUnselect)
+        state->Out.RangeValue = true;
+    g.MultiSelectScopeId = 0;
+    g.MultiSelectScopeWindow = NULL;
+    g.MultiSelectFlags = 0;
+
+#if IMGUI_DEBUG_MULTISELECT
+    if (state->Out.RequestClear)     printf("[%05d] EndMultiSelect: RequestClear\n", g.FrameCount);
+    if (state->Out.RequestSelectAll) printf("[%05d] EndMultiSelect: RequestSelectAll\n", g.FrameCount);
+    if (state->Out.RequestSetRange)  printf("[%05d] EndMultiSelect: RequestSetRange %p..%p = %d\n", g.FrameCount, state->Out.RangeSrc, state->Out.RangeDst, state->Out.RangeValue);
+#endif
+
+    return &state->Out;
+}
+
+void ImGui::SetNextItemMultiSelectData(void* item_data)
+{
+    ImGuiContext& g = *GImGui;
+    g.NextItemMultiSelectData = item_data;
+    g.NextItemMultiSelectDataIsSet = true;
+}
+
+void ImGui::MultiSelectItemHeader(ImGuiID id, bool* p_selected)
+{
+    ImGuiContext& g = *GImGui;
+    ImGuiMultiSelectState* state = &g.MultiSelectState;
+
+    IM_ASSERT(g.NextItemMultiSelectDataIsSet && "Forgot to call SetNextItemMultiSelectData() prior to item, required in BeginMultiSelect()/EndMultiSelect() scope");
+    void* item_data = g.NextItemMultiSelectData;
+
+    // Apply Clear/SelectAll requests requested by BeginMultiSelect().
+    // This is only useful if the user hasn't processed them already, and this only works if the user isn't using the clipper.
+    // If you are using a clipper (aka not submitting every element of the list) you need to process the Clear/SelectAll request after calling BeginMultiSelect()
+    bool selected = *p_selected;
+    if (state->In.RequestClear)
+        selected = false;
+    else if (state->In.RequestSelectAll)
+        selected = true;
+
+    const bool is_range_src = (state->In.RangeSrc == item_data);
+    if (is_range_src)
+        state->In.RangeSrcPassedBy = true;
+
+    // When using SHIFT+Nav: because it can incur scrolling we cannot afford a frame of lag with the selection highlight (otherwise scrolling would happen before selection)
+    // For this to work, IF the user is clipping items, they need to set RangeSrcPassedBy = true to notify the system.
+    if (state->InRequestSetRangeNav)
+    {
+        IM_ASSERT(id != 0);
+        IM_ASSERT(g.IO.KeyShift);
+        const bool is_range_dst = !state->InRangeDstPassedBy && g.NavJustMovedToId == id;     // Assume that g.NavJustMovedToId is not clipped.
+        if (is_range_dst)
+            state->InRangeDstPassedBy = true;
+        if (is_range_src || is_range_dst || state->In.RangeSrcPassedBy != state->InRangeDstPassedBy)
+            selected = state->In.RangeValue;
+        else if (!g.IO.KeyCtrl)
+            selected = false;
+    }
+
+    *p_selected = selected;
+}
+
+void ImGui::MultiSelectItemFooter(ImGuiID id, bool* p_selected, bool* p_pressed)
+{
+    ImGuiContext& g = *GImGui;
+    ImGuiWindow* window = g.CurrentWindow;
+    ImGuiMultiSelectState* state = &g.MultiSelectState;
+
+    void* item_data = g.NextItemMultiSelectData;
+    g.NextItemMultiSelectDataIsSet = false;
+
+    bool selected = *p_selected;
+    bool pressed = *p_pressed;
+    bool is_ctrl = g.IO.KeyCtrl;
+    bool is_shift = g.IO.KeyShift;
+    const bool is_multiselect = (g.MultiSelectFlags & ImGuiMultiSelectFlags_NoMultiSelect) == 0;
+
+    // Auto-select as you navigate a list
+    if (g.NavJustMovedToId == id)
+    {
+        if (!g.IO.KeyCtrl)
+            selected = pressed = true;
+        else if (g.IO.KeyCtrl && g.IO.KeyShift)
+            pressed = true;
+    }
+
+    // Right-click handling: this could be moved at the Selectable() level.
+    bool hovered = IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup);
+    if (hovered && IsMouseClicked(1))
+    {
+        SetFocusID(window->DC.LastItemId, window);
+        if (!pressed && !selected)
+        {
+            pressed = true;
+            is_ctrl = is_shift = false;
+        }
+    }
+
+    if (pressed)
+    {
+        //-------------------------------------------------------------------------------------------------------------------------------------------------
+        // ACTION                           | Begin     | Item Old        | Item New                                                   | End
+        //-------------------------------------------------------------------------------------------------------------------------------------------------
+        // Keys Navigated, Ctrl=0, Shift=0  | In.Clear  | Clear -> Sel=0  | Src=item, Pressed -> Sel=1                                 |
+        // Keys Navigated, Ctrl=0, Shift=1  | n/a       | n/a             | Dst=item, Pressed -> Sel=1,   Out.Clear, Out.SetRange=1    | Clear + SetRange
+        // Keys Navigated, Ctrl=1, Shift=1  | n/a       | n/a             | Dst=item, Pressed -> Sel=Src, Out.Clear, Out.SetRange=Src  | Clear + SetRange    
+        // Mouse Pressed, Ctrl=0, Shift=0   | n/a       | n/a (Sel=1)     | Src=item, Pressed -> Sel=1,   Out.Clear, Out.SetRange=1    | Clear + SetRange
+        // Mouse Pressed, Ctrl=0, Shift=1   | n/a       | n/a             | Dst=item, Pressed -> Sel=1,   Out.Clear, Out.SetRange=1    | Clear + SetRange
+        //-------------------------------------------------------------------------------------------------------------------------------------------------
+
+        ImGuiInputSource input_source = (g.NavJustMovedToId != 0 && g.NavWindow == window && g.NavJustMovedToId == window->DC.LastItemId) ? ImGuiInputSource_Nav : ImGuiInputSource_Mouse;
+        if (is_shift && is_multiselect)
+        {
+            state->Out.RequestSetRange = true;
+            state->Out.RangeDst = item_data;
+            if (!is_ctrl)
+                state->Out.RangeValue = true;
+            state->Out.RangeDirection = state->In.RangeSrcPassedBy ? +1 : -1;
+        }
+        else
+        {
+            selected = (!is_ctrl || (g.MultiSelectFlags & ImGuiMultiSelectFlags_NoUnselect)) ? true : !selected;
+            state->Out.RangeSrc = state->Out.RangeDst = item_data;
+            state->Out.RangeValue = selected;
+        }
+
+        if (input_source == ImGuiInputSource_Mouse)
+        {
+            // Mouse click without CTRL clears the selection, unless the clicked item is already selected
+            bool preserve_existing_selection = g.DragDropActive;
+            if (is_multiselect && !is_ctrl && !preserve_existing_selection)
+                state->Out.RequestClear = true;
+            if (is_multiselect && !is_shift && !preserve_existing_selection && state->Out.RequestClear)
+            {
+                // For toggle selection unless there is a Clear request, we can handle it completely locally without sending a RangeSet request.
+                IM_ASSERT(state->Out.RangeSrc == state->Out.RangeDst); // Setup by block above
+                state->Out.RequestSetRange = true;
+                state->Out.RangeValue = selected;
+                state->Out.RangeDirection = +1;
+            }
+            if (!is_multiselect)
+            {
+                // Clear selection, set single item range
+                IM_ASSERT(state->Out.RangeSrc == item_data && state->Out.RangeDst == item_data); // Setup by block above
+                state->Out.RequestClear = true;
+                state->Out.RequestSetRange = true;
+            }
+        }
+        else if (input_source == ImGuiInputSource_Nav)
+        {
+            if (!is_multiselect)
+                state->Out.RequestClear = true;
+            else if (is_shift && !is_ctrl && is_multiselect)
+                state->Out.RequestClear = true;
+        }
+    }
+
+    // Update/store the selection state of the Source item (used by CTRL+SHIFT, when Source is unselected we perform a range unselect)
+    if (state->Out.RangeSrc == item_data && is_ctrl && is_shift && is_multiselect && !(g.MultiSelectFlags & ImGuiMultiSelectFlags_NoUnselect))
+        state->Out.RangeValue = selected;
+
+    *p_selected = selected;
+    *p_pressed = pressed;
 }
 
 //-------------------------------------------------------------------------
