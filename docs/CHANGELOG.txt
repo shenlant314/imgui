@@ -42,6 +42,10 @@ Breaking Changes:
 Other Changes:
 
 - Nav: Fixed a tap on AltGR (e.g. German keyboard) from navigating to the menu layer.
+- Misc: Switched to using a variant of fnv1a hash function instead of CRC32.
+  Hashing is roughly 50% faster (assuming the CRC32 table was already in cache), and
+  mostly the main benefit of this change is we don't waste 1KB of cache for the CRC32
+  table, ultimately improving performances everywhere by a small margin.
 - DragScalar, InputScalar, SliderScalar: Added support for u8/s8/u16/s16 data types.
   We are reusing function instances for larger types to reduce code size. (#643, #320, #708, #1011)
 - InputInt, InputFloat, InputScalar: Fix to keep the label of the +/- buttons centered when
