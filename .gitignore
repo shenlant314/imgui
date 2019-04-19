@@ -1,0 +1,67 @@
+# Prerequisites
+*.d
+*.tli
+*.tlh
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+*.user
+*.pdb
+*.idb
+*.ncb
+
+# Executables
+*.exe
+*.out
+*.app
+*.arx
+
+*.xml
+*.tlog
+*.old
+*.filter
+*.suo
+*.bak
+*.tlh
+*.manifest
+*.tlog
+*.log
+*.res
+*.filters
+*.sdf
+*.aps
+*.htm
+*.lastbuildstate
+*.cache
+*.metagen
+*.rar
+*.xsd
+*.unsuccessfulbuild
+*.bi
+*.dep
+GdsFileReadTest/Debug/
+GDSFileTest/x64/
+GDSFileTest/Debug/
+GDSFileTest/Backup/
