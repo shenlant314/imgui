@@ -740,7 +740,7 @@ void GDSIIData::ReadGDSIIFile(const string FileName, double CoordinateLengthUnit
    /*--------------------------------------------------------------*/
    /*- try to open the file ---------------------------------------*/
    /*--------------------------------------------------------------*/
-   FILE *f=fopen(FileName.c_str(),"r");
+   FILE *f=fopen(FileName.c_str(),"rb"); // ø”À¿»À
    if (!f)
     { ErrMsg = new string("could not open " + FileName);
       return;

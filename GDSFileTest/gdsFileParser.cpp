@@ -285,8 +285,8 @@ namespace gdsfp
         std::vector<int> y;
 
         for(int i=0; i<count; ++i) {
-            x[i] = readInt(input);
-            y[i] = readInt(input);
+            x.push_back(readInt(input));
+            y.push_back( readInt(input));
         }
 
         onParsedXY(count, x, y);
@@ -375,8 +375,8 @@ namespace gdsfp
         input->read(&recType, sizeof(recType));
         input->read(&dataType, sizeof(dataType));
 
-        //switch(recType) {
-		switch (dataType) {
+        switch(recType) {
+		//switch (dataType) {
             case HEADER:        readHeader(input);              break;
 
             case BGNLIB:        readModTimeStamp(input);
@@ -456,9 +456,11 @@ namespace gdsfp
 
     int gdsFileParser::parse(const char *filePath)
     {
-        std::ifstream gdsFile(filePath, ios::in | ios::binary);
+        std::ifstream gdsFile;
+		gdsFile.open(filePath, ios::binary);
+		//FILE *gdsFile=fopen(filePath,"rb"); // ø”À¿»À
 
-        if(gdsFile.is_open()) 
+        if(gdsFile) 
 		{
             stringstream stream(ios::in | ios::out | ios::binary);
             unsigned int total = 0;
@@ -467,6 +469,12 @@ namespace gdsfp
 			{
                 stream.str("");
                 unsigned short length = readShort(&gdsFile);
+// 				char Header[2];
+// 				if ( 2 != fread(Header, 1, 2, gdsFile) )
+// 				{ 
+// 					 cerr << "unexpected end of file"<< endl;
+// 				}
+// 				unsigned short length = Header[0]*256 + Header[1];
 
                 if(length==0) 
 				{
@@ -474,15 +482,27 @@ namespace gdsfp
                 }
 
                 short sub = sizeof(length);
-				char* buffer = new char[length - sub];
+				//char* buffer = new char[length - sub];
+				char* buffer = new char[length - 2];
                 //gdsFile.read((char *)&buffer, sizeof(buffer));
-				gdsFile.read(buffer, sizeof(buffer));
+				gdsFile.read(buffer, length - 2);
+// 				if ( (length - 2) != fread(buffer, 1, length - 2, gdsFile) )
+// 				{ 
+// 					cerr << "unexpected end of file"<< endl;
+// 				}
+				unsigned short nReadL = sizeof(buffer);
                 total += length;
-                stream.write(buffer, length - sub);
+				stream.write(buffer, length - 2);
+				stream.seekg(0, std::ios::end);
+				nReadL = stream.tellg();
+				stream.seekg(0, std::ios::beg);
                 parseBuffer(&stream);
 
 				//delete buffer;
-            } while(gdsFile.good());
+			//} while(gdsFile);
+           } while(gdsFile.good());
+
+//			fclose(gdsFile);
         } 
 		else 
 		{

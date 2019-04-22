@@ -7,7 +7,7 @@ using namespace libGDSII;
 int _tmain(int argc, _TCHAR* argv[])
 {
 	setlocale(LC_CTYPE, "");
-	GDSIIData *gdsIIData  = new GDSIIData( string("D:\\code\\tmpcode\\GdsFileReadTest\\Debug\\MHD.gds") );
+	GDSIIData *gdsIIData  = new GDSIIData( string("D:\\code\\tmpcode\\GdsFileReadTest\\Debug\\snowflow.gds") );
 	if (gdsIIData->ErrMsg)
 	{ 
 		printf("error: %s (aborting)\n",gdsIIData->ErrMsg->c_str());
