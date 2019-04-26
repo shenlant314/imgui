@@ -2,16 +2,15 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="GdsFileToBmp"
-	ProjectGUID="{3357A210-28BB-45F7-9BA9-CA2A01250BCA}"
+	Name="GDSFileToBMP"
+	ProjectGUID="{30FADE28-DED7-4B02-B60C-52BB36B07506}"
+	RootNamespace="GDSFileToBMP"
+	Keyword="MFCProj"
 	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
 		<Platform
 			Name="Win32"
-		/>
-		<Platform
-			Name="x64"
 		/>
 	</Platforms>
 	<ToolFiles>
@@ -19,13 +18,11 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="1"
 			UseOfMFC="2"
-			UseOfATL="0"
 			CharacterSet="1"
-			ManagedExtensions="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -41,22 +38,19 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
+				PreprocessorDefinitions="_DEBUG"
+				MkTypLibCompatible="false"
+				ValidateParameters="true"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalUsingDirectories="C:\Program Files\Autodesk\AutoCAD 2016\"
-				PreprocessorDefinitions="WIN32;_WINDOWS;GDSFILETOBMP_MODULE;_AFXEXT;_ACRXAPP"
-				StringPooling="false"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="2"
-				BufferSecurityCheck="true"
-				TreatWChar_tAsBuiltInType="true"
-				ForceConformanceInForLoopScope="true"
-				RuntimeTypeInfo="true"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
-				WarningLevel="1"
+				WarningLevel="3"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -64,19 +58,18 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_DEBUG"
+				Culture="2052"
+				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(outdir)/iWGdsFileToBmp.arx"
 				LinkIncremental="2"
-				LinkDLL="true"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)/GdsFileToBmp.pdb"
 				SubSystem="2"
-				ImportLibrary="$(OutDir)/GdsFileToBmp.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -103,13 +96,12 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="1"
 			UseOfMFC="2"
-			UseOfATL="0"
 			CharacterSet="1"
-			ManagedExtensions="0"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -125,106 +117,20 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
+				PreprocessorDefinitions="NDEBUG"
+				MkTypLibCompatible="false"
+				ValidateParameters="true"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				AdditionalUsingDirectories="C:\Program Files\Autodesk\AutoCAD 2016\"
-				PreprocessorDefinitions="WIN32;_WINDOWS;GDSFILETOBMP_MODULE;NDEBUG;_AFXEXT;_ACRXAPP"
-				StringPooling="true"
+				EnableIntrinsicFunctions="true"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG"
 				MinimalRebuild="false"
-				BasicRuntimeChecks="0"
 				RuntimeLibrary="2"
-				BufferSecurityCheck="true"
-				TreatWChar_tAsBuiltInType="true"
-				ForceConformanceInForLoopScope="true"
-				RuntimeTypeInfo="true"
+				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
-				WarningLevel="1"
-				DebugInformationFormat="0"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				OutputFile="$(outdir)/iWGdsFileToBmp.arx"
-				LinkIncremental="2"
-				LinkDLL="true"
-				GenerateDebugInformation="false"
-				ProgramDatabaseFile=""
-				SubSystem="2"
-				ImportLibrary="$(OutDir)/GdsFileToBmp.lib"
-				TargetMachine="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Debug|x64"
-			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
-			UseOfMFC="2"
-			UseOfATL="0"
-			CharacterSet="1"
-			ManagedExtensions="0"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalUsingDirectories="C:\Program Files\Autodesk\AutoCAD 2016\"
-				PreprocessorDefinitions="_WIN64;_WINDOWS;GDSFILETOBMP_MODULE;_AFXEXT;_ACRXAPP"
-				StringPooling="false"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="2"
-				BufferSecurityCheck="true"
-				TreatWChar_tAsBuiltInType="true"
-				ForceConformanceInForLoopScope="true"
-				RuntimeTypeInfo="true"
-				UsePrecompiledHeader="2"
-				WarningLevel="1"
+				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -232,104 +138,21 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="NDEBUG"
+				Culture="2052"
+				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(outdir)/iWGdsFileToBmp.arx"
-				LinkIncremental="2"
-				LinkDLL="true"
+				LinkIncremental="1"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)/GdsFileToBmp.pdb"
 				SubSystem="2"
-				ImportLibrary="$(OutDir)/GdsFileToBmp.lib"
-				TargetMachine="17"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Release|x64"
-			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
-			UseOfMFC="2"
-			UseOfATL="0"
-			CharacterSet="1"
-			ManagedExtensions="0"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="2"
-				AdditionalUsingDirectories="C:\Program Files\Autodesk\AutoCAD 2016\"
-				PreprocessorDefinitions="_WIN64;_WINDOWS;GDSFILETOBMP_MODULE;NDEBUG;_AFXEXT;_ACRXAPP"
-				StringPooling="true"
-				MinimalRebuild="false"
-				BasicRuntimeChecks="0"
-				RuntimeLibrary="2"
-				BufferSecurityCheck="true"
-				TreatWChar_tAsBuiltInType="true"
-				ForceConformanceInForLoopScope="true"
-				RuntimeTypeInfo="true"
-				UsePrecompiledHeader="2"
-				WarningLevel="1"
-				DebugInformationFormat="0"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				OutputFile="$(outdir)/iWGdsFileToBmp.arx"
-				LinkIncremental="2"
-				LinkDLL="true"
-				GenerateDebugInformation="false"
-				ProgramDatabaseFile=""
-				SubSystem="2"
-				ImportLibrary="$(OutDir)/GdsFileToBmp.lib"
-				TargetMachine="17"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -358,23 +181,28 @@
 	</References>
 	<Files>
 		<Filter
-			Name="Source Files"
-			Filter="cpp;c;cc;cxx;def;idl;odl"
+			Name="源文件"
+			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
+			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\acrxEntryPoint.cpp"
+				RelativePath=".\gdsFileParser.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\DocData.cpp"
+				RelativePath=".\GDSFileToBMP.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\GdsFileToBmp.cpp"
+				RelativePath=".\GDSFileToBMPDlg.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\StdAfx.cpp"
+				RelativePath=".\GdsParserToBMP.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -392,30 +220,31 @@
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
-			Name="Include Files"
-			Filter="h;hh;hxx"
+			Name="头文件"
+			Filter="h;hpp;hxx;hm;inl;inc;xsd"
+			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\DocData.h"
+				RelativePath=".\gdsCalmaRecords.h"
+				>
+			</File>
+			<File
+				RelativePath=".\gdsFileParser.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GDSFileToBMP.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GDSFileToBMPDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GdsParserToBMP.h"
 				>
 			</File>
 			<File
@@ -423,25 +252,41 @@
 				>
 			</File>
 			<File
-				RelativePath=".\StdAfx.h"
+				RelativePath=".\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\targetver.h"
 				>
 			</File>
 		</Filter>
 		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;bmp;cur;jpg;gif"
+			Name="资源文件"
+			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
+			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath=".\GdsFileToBmp.rc"
+				RelativePath=".\res\GDSFileToBMP.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\GDSFileToBMP.rc"
+				>
+			</File>
+			<File
+				RelativePath=".\res\GDSFileToBMP.rc2"
 				>
 			</File>
 		</Filter>
-		<Filter
-			Name="Miscellaneous Files"
-			Filter="reg;rgs;mak;clw;vsdir;vsz;css;inf;vcproj;csproj"
+		<File
+			RelativePath=".\ReadMe.txt"
 			>
-		</Filter>
+		</File>
 	</Files>
 	<Globals>
+		<Global
+			Name="RESOURCE_FILE"
+			Value="GDSFileToBMP.rc"
+		/>
 	</Globals>
 </VisualStudioProject>

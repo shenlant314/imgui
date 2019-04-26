@@ -1,59 +1,79 @@
-// (C) Copyright 2002-2007 by Autodesk, Inc. 
-//
-// Permission to use, copy, modify, and distribute this software in
-// object code form for any purpose and without fee is hereby granted, 
-// provided that the above copyright notice appears in all copies and 
-// that both that copyright notice and the limited warranty and
-// restricted rights notice below appear in all supporting 
-// documentation.
-//
-// AUTODESK PROVIDES THIS PROGRAM "AS IS" AND WITH ALL FAULTS. 
-// AUTODESK SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTY OF
-// MERCHANTABILITY OR FITNESS FOR A PARTICULAR USE.  AUTODESK, INC. 
-// DOES NOT WARRANT THAT THE OPERATION OF THE PROGRAM WILL BE
-// UNINTERRUPTED OR ERROR FREE.
-//
-// Use, duplication, or disclosure by the U.S. Government is subject to 
-// restrictions set forth in FAR 52.227-19 (Commercial Computer
-// Software - Restricted Rights) and DFAR 252.227-7013(c)(1)(ii)
-// (Rights in Technical Data and Computer Software), as applicable.
+
+// GDSFileToBMP.cpp : 定义应用程序的类行为。
 //
 
-//-----------------------------------------------------------------------------
-//- GdsFileToBmp.cpp : Initialization functions
-//-----------------------------------------------------------------------------
-#include "StdAfx.h"
-#include "resource.h"
-#include <afxdllx.h>
+#include "stdafx.h"
+#include "GDSFileToBMP.h"
+#include "GDSFileToBMPDlg.h"
 
-//-----------------------------------------------------------------------------
-//- Define the sole extension module object.
-AC_IMPLEMENT_EXTENSION_MODULE(GdsFileToBmpDLL)
-//- Please do not remove the 3 following lines. These are here to make .NET MFC Wizards
-//- running properly. The object will not compile but is require by .NET to recognize
-//- this project as being an MFC project
-#ifdef NEVER
-AFX_EXTENSION_MODULE GdsFileToBmpExtDLL ={ NULL, NULL } ;
+#ifdef _DEBUG
+#define new DEBUG_NEW
 #endif
 
-//- Now you can use the CAcModuleResourceOverride class in
-//- your application to switch to the correct resource instance.
-//- Please see the ObjectARX Documentation for more details
 
-//-----------------------------------------------------------------------------
-//- DLL Entry Point
-extern "C"
-BOOL WINAPI DllMain (HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved) {
-	//- Remove this if you use lpReserved
-	UNREFERENCED_PARAMETER(lpReserved) ;
+// CGDSFileToBMPApp
 
-	if ( dwReason == DLL_PROCESS_ATTACH ) {
-        _hdllInstance =hInstance ;
-		GdsFileToBmpDLL.AttachInstance (hInstance) ;
-		InitAcUiDLL () ;
-	} else if ( dwReason == DLL_PROCESS_DETACH ) {
-		GdsFileToBmpDLL.DetachInstance () ;
-	}
-	return (TRUE) ;
+BEGIN_MESSAGE_MAP(CGDSFileToBMPApp, CWinAppEx)
+	ON_COMMAND(ID_HELP, &CWinApp::OnHelp)
+END_MESSAGE_MAP()
+
+
+// CGDSFileToBMPApp 构造
+
+CGDSFileToBMPApp::CGDSFileToBMPApp()
+{
+	// TODO: 在此处添加构造代码，
+	// 将所有重要的初始化放置在 InitInstance 中
 }
 
+
+// 唯一的一个 CGDSFileToBMPApp 对象
+
+CGDSFileToBMPApp theApp;
+
+
+// CGDSFileToBMPApp 初始化
+
+BOOL CGDSFileToBMPApp::InitInstance()
+{
+	// 如果一个运行在 Windows XP 上的应用程序清单指定要
+	// 使用 ComCtl32.dll 版本 6 或更高版本来启用可视化方式，
+	//则需要 InitCommonControlsEx()。否则，将无法创建窗口。
+	INITCOMMONCONTROLSEX InitCtrls;
+	InitCtrls.dwSize = sizeof(InitCtrls);
+	// 将它设置为包括所有要在应用程序中使用的
+	// 公共控件类。
+	InitCtrls.dwICC = ICC_WIN95_CLASSES;
+	InitCommonControlsEx(&InitCtrls);
+
+	CWinAppEx::InitInstance();
+
+	AfxEnableControlContainer();
+
+	// 标准初始化
+	// 如果未使用这些功能并希望减小
+	// 最终可执行文件的大小，则应移除下列
+	// 不需要的特定初始化例程
+	// 更改用于存储设置的注册表项
+	// TODO: 应适当修改该字符串，
+	// 例如修改为公司或组织名
+	SetRegistryKey(_T("应用程序向导生成的本地应用程序"));
+
+	CGDSFileToBMPDlg dlg;
+	m_pMainWnd = &dlg;
+	INT_PTR nResponse = dlg.DoModal();
+	if (nResponse == IDOK)
+	{
+		// TODO: 在此放置处理何时用
+		//  “确定”来关闭对话框的代码
+	}
+	else if (nResponse == IDCANCEL)
+	{
+		// TODO: 在此放置处理何时用
+		//  “取消”来关闭对话框的代码
+	}
+
+	// 由于对话框已关闭，所以将返回 FALSE 以便退出应用程序，
+	//  而不是启动应用程序的消息泵。
+	return FALSE;
+}
