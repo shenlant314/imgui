@@ -160,7 +160,7 @@ void CGDSFileToBMPDlg::OnBnClickedOk()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	GdsParserToBMP parser(&m_ctrlProgress);
-	parser.parse("D:\\code\\tmpcode\\GDSFileTest\\x64\\Debug\\MHD.gds");
+	parser.parse("D:\\code\\tmpcode\\GDSFileTest\\x64\\Debug\\snowflow.gds");
 	//parser.PrintExtentPoint();
 	parser.TransPointToPixel();
 	OnOK();

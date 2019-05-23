@@ -48,6 +48,9 @@ protected:
 	// 生成BMP
 	bool GenerateBMP(BYTE * pData,int nWidth, int nHeight, const CString& strFilename);
 
+	// 解析时保存的txt文本
+	CStdioFile m_outTxtFile;
+
 protected:
 	virtual void onParsedGDSVersion(unsigned short version);
 	virtual void onParsedModTime(short year, short month, short day,short hour, short minute, short sec);
