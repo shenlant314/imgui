@@ -13,6 +13,51 @@ typedef struct _GePointStru
 } GePointStru;
 typedef std::vector<GePointStru> GePointVector;
 
+typedef struct _GDS_Element
+{
+	// Element类型，
+	// BOUNDARY 边界线，定义了一个填充多边形；
+	// PATH 路径定义了一根电线；
+	// SREF 结构引用（structure reference）调用了一个子单元；
+	// AREF 数组引用（array reference）调用了一个数组陈列的子单元；
+	// TEXT 文本（text）用来作为记录信息；
+	// NODE 节点（node）定义了一个电气路径；
+	// BOX 盒子（box）定义了一个矩形图形。
+	CString m_strElementType; 
+	// 图层
+	CString m_strLayer;
+	// 数据类型
+	int m_nDataType;
+
+	// 路径类型，仅element时path才是有效数据
+	int m_nPathType;
+
+	// 结构引用的结构名，仅element时SREF才是有效数据
+	CString m_strSrefName;
+
+	// 数组引用的结构名，仅element时AREF才是有效数据
+	CString m_strArefName;
+	// 陈列的行和列，仅element时AREF才是有效数据
+	int m_nColumns;
+	int m_nRows;
+
+	// 下面这几个还不知道是干嘛的
+	double m_dMag;
+	double m_dAngle;
+
+	// 坐标
+	GePointVector m_gePtVec;
+
+} GDS_Element;
+typedef std::vector<GDS_Element> GDS_ElementVector;
+
+typedef struct _GDS_Structure
+{
+	
+
+} GDS_Structure;
+typedef std::map<CString,GDS_Structure> GDS_StructureMap;
+
 class GdsParserToBMP: public GDSParser::gdsFileParser
 {
 public:
@@ -25,6 +70,8 @@ public:
 	void PrintExtentPoint();
 
 	void SetBMPDPI(int nDpi);
+
+	int parse(const CString& strfilePath);
 
 protected:
 	// 保存Boundary数据

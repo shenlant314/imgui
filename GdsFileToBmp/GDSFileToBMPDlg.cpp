@@ -45,7 +45,7 @@ END_MESSAGE_MAP()
 
 // CGDSFileToBMPDlg 对话框
 
-
+StruParseFileInfo CGDSFileToBMPDlg::m_stuFilrInfo;
 
 
 CGDSFileToBMPDlg::CGDSFileToBMPDlg(CWnd* pParent /*=NULL*/)
@@ -159,9 +159,67 @@ HCURSOR CGDSFileToBMPDlg::OnQueryDragIcon()
 void CGDSFileToBMPDlg::OnBnClickedOk()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	GdsParserToBMP parser(&m_ctrlProgress);
-	parser.parse("D:\\code\\tmpcode\\GDSFileTest\\x64\\Debug\\snowflow.gds");
-	//parser.PrintExtentPoint();
-	parser.TransPointToPixel();
-	OnOK();
+	CFileDialog    dlgFile(TRUE, NULL, NULL, OFN_ALLOWMULTISELECT | OFN_HIDEREADONLY, _T("Describe Files (*.gds)|*.gds||"), NULL);
+	//最多可以打开500个文件  
+	dlgFile.m_ofn.nMaxFile = 500 * MAX_PATH;  
+	m_stuFilrInfo.m_strAryFilePath.RemoveAll();
+	m_stuFilrInfo.m_pctrlProgress = &m_ctrlProgress;
+	m_stuFilrInfo.m_pstatPromt = &m_statPromt;
+
+	TCHAR* ch = new TCHAR[dlgFile.m_ofn.nMaxFile];  
+	dlgFile.m_ofn.lpstrFile = ch;  
+	//对内存块清零  
+	ZeroMemory(dlgFile.m_ofn.lpstrFile,sizeof(TCHAR) * dlgFile.m_ofn.nMaxFile); 
+	CString pathName,fileName,fileTitle;  
+	if (dlgFile.DoModal() == IDOK)
+	{
+		//获取第一个文件的位置  
+		POSITION pos_file;  
+		pos_file = dlgFile.GetStartPosition();  
+
+		//循环读出每个路径并存放在数组中  
+		while(pos_file != NULL)
+		{  
+
+			//将文件路径存放在数组中  
+			pathName = dlgFile.GetNextPathName(pos_file);  
+
+			m_stuFilrInfo.m_strAryFilePath.Add(pathName);
+		}
+
+		AfxBeginThread(ParseGdsFileThreadProc,&m_stuFilrInfo, THREAD_PRIORITY_NORMAL);
+
+	}
+	delete[] ch;  
+
+//	OnOK();
+}
+
+UINT CGDSFileToBMPDlg::ParseGdsFileThreadProc( LPVOID pParam )
+{
+	StruParseFileInfo * pStuMarkData = (StruParseFileInfo * )pParam;
+	if(pStuMarkData == NULL)
+	{
+		return 0;
+	}
+	// 复制一个临时的对象，避免对话框退出导致指正无效
+	//StruParseFileInfo procStuMark = *pStuMarkData;
+
+	// 处理替换文字
+	for(int i = 0; i < pStuMarkData->m_strAryFilePath.GetCount(); i++)  
+	{
+		CString strFileName = pStuMarkData->m_strAryFilePath.GetAt(i);
+		strFileName = strFileName.Mid(strFileName.ReverseFind('\\') + 1 );
+		CString strTitle;
+		strTitle.Format(_T("正在解析文件%s……"), strFileName);
+		pStuMarkData->m_pstatPromt->SetWindowText(strTitle);
+		GdsParserToBMP parser(m_stuFilrInfo.m_pctrlProgress);
+		parser.parse(pStuMarkData->m_strAryFilePath.GetAt(i));
+		//parser.PrintExtentPoint();
+		strTitle.Format(_T("正在将文件%s的解析数据保存为BMP……"), strFileName);
+		pStuMarkData->m_pstatPromt->SetWindowText(strTitle);
+		parser.TransPointToPixel();
+	}
+
+	pStuMarkData->m_pstatPromt->SetWindowText(_T("解析转换完成"));
 }

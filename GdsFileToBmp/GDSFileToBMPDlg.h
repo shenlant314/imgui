@@ -6,6 +6,12 @@
 #include "afxcmn.h"
 #include "afxwin.h"
 
+typedef struct _StruParseFileInfo 
+{
+	CStringArray m_strAryFilePath;
+	CProgressCtrl* m_pctrlProgress;
+	CStatic* m_pstatPromt;
+}StruParseFileInfo;
 
 // CGDSFileToBMPDlg 对话框
 class CGDSFileToBMPDlg : public CDialog
@@ -20,6 +26,8 @@ public:
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
 
+	static UINT ParseGdsFileThreadProc( LPVOID pParam );
+	static StruParseFileInfo m_stuFilrInfo;
 
 // 实现
 protected:

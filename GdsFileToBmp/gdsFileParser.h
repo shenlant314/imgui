@@ -36,6 +36,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <map>
 
 namespace GDSParser
 {
@@ -43,7 +44,7 @@ namespace GDSParser
     class gdsFileParser
     {
     public:
-        int parse(const char *filePath);
+        virtual int parse(const CString& strfilePath) = 0;
 
     protected:
         virtual void onParsedGDSVersion(unsigned short version) = 0;
@@ -86,7 +87,7 @@ namespace GDSParser
         virtual void onParsedNodeType(unsigned short nodeType) = 0;
         virtual void onParsedBoxType(unsigned short boxType) = 0;
 
-    private:
+		protected:
         void readString(std::stringstream *input, std::string *str);
         void readTimeStamp(std::stringstream *input, short *year, short *month,
                            short *day, short *hour, short *minute, short *sec);
