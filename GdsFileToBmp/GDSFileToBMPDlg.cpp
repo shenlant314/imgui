@@ -218,8 +218,10 @@ UINT CGDSFileToBMPDlg::ParseGdsFileThreadProc( LPVOID pParam )
 		//parser.PrintExtentPoint();
 		strTitle.Format(_T("正在将文件%s的解析数据保存为BMP……"), strFileName);
 		pStuMarkData->m_pstatPromt->SetWindowText(strTitle);
-		parser.TransPointToPixel();
+		parser.GenerateBMP(2500,2500, _T("D:\\TestOutBmp.BMP"));
 	}
 
 	pStuMarkData->m_pstatPromt->SetWindowText(_T("解析转换完成"));
+
+	return 0;
 }

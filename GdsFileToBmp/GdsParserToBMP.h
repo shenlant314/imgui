@@ -25,12 +25,13 @@ typedef struct _GDS_Element
 	// BOX 盒子（box）定义了一个矩形图形。
 	CString m_strElementType; 
 	// 图层
-	CString m_strLayer;
+	int m_nLayer;
 	// 数据类型
 	int m_nDataType;
 
 	// 路径类型，仅element时path才是有效数据
 	int m_nPathType;
+	int m_nWidth;
 
 	// 结构引用的结构名，仅element时SREF才是有效数据
 	CString m_strSrefName;
@@ -41,6 +42,10 @@ typedef struct _GDS_Element
 	int m_nColumns;
 	int m_nRows;
 
+	//文字字符串,仅为TEXT时有用
+	CString m_strTextString;
+	int m_nTextType;
+
 	// 下面这几个还不知道是干嘛的
 	double m_dMag;
 	double m_dAngle;
@@ -48,15 +53,29 @@ typedef struct _GDS_Element
 	// 坐标
 	GePointVector m_gePtVec;
 
+	_GDS_Element()
+	{
+		m_nLayer = 0;
+		m_nDataType = 0;
+
+		m_nPathType = 0;
+		m_nWidth = 0;
+		m_nTextType = 0;
+
+		m_dMag = 0.0;
+		m_dAngle = 0.0;
+	}
+
 } GDS_Element;
 typedef std::vector<GDS_Element> GDS_ElementVector;
 
 typedef struct _GDS_Structure
 {
+	CString m_strName;					// 结构名
+	GDS_ElementVector m_vecElem;		// 包含的元素列表
 	
-
 } GDS_Structure;
-typedef std::map<CString,GDS_Structure> GDS_StructureMap;
+typedef std::map<CString,GDS_Structure> GDS_StructureMap; // <结构名,结构参数>
 
 class GdsParserToBMP: public GDSParser::gdsFileParser
 {
@@ -64,8 +83,8 @@ public:
 	GdsParserToBMP(CProgressCtrl* pCtrlProgress);
 	~GdsParserToBMP(void);
 
-	// 将Boundary数据矢量化为像素点阵
-	bool TransPointToPixel();
+	// 生成BMP
+	bool GenerateBMP(int nWidth, int nHeight, const CString& strFilename);
 
 	void PrintExtentPoint();
 
@@ -76,6 +95,7 @@ public:
 protected:
 	// 保存Boundary数据
 	std::vector<GePointVector> m_vecPointVec;
+
 
 	// XY值的最大和最小
 	int m_nMinX;
@@ -92,26 +112,35 @@ protected:
 
 	CProgressCtrl* m_pCtrlProgress;
 
-	// 生成BMP
-	bool GenerateBMP(BYTE * pData,int nWidth, int nHeight, const CString& strFilename);
+	// 将Boundary数据矢量化为像素点阵
+	bool TransPointToPixel(BYTE * pData,int nWidth, int nHeight);
 
 	// 解析时保存的txt文本
 	CStdioFile m_outTxtFile;
-
+//////////////////////////////////////////////////////////////////////////
+protected:
+	// 保存的解析结构参数
+	GDS_StructureMap m_mapStuParam;
+	GDS_Structure m_stuCurrentRead;
+	GDS_Element   m_elemCurrentRead;
 protected:
 	virtual void onParsedGDSVersion(unsigned short version);
 	virtual void onParsedModTime(short year, short month, short day,short hour, short minute, short sec);
 	virtual void onParsedAccessTime(short year, short month, short day,
 		short hour, short minute, short sec);
-	virtual void onParsedLibName(const char *libName);
 	virtual void onParsedUnits(double userUnits, double databaseUnits);
+
+	virtual void onParsedLibName(const char *libName);
+	virtual void onParsedEndLib();
+
 	virtual void onParsedStrName(const char *strName);
+	virtual void onParsedEndStructure();
+
 	virtual void onParsedBoundaryStart();
 	virtual void onParsedPathStart();
 	virtual void onParsedBoxStart();
 	virtual void onParsedEndElement();
-	virtual void onParsedEndStructure();
-	virtual void onParsedEndLib();
+
 	virtual void onParsedColumnsRows(unsigned short columns,
 		unsigned short rows);
 	virtual void onParsedPathType(unsigned short pathType);
