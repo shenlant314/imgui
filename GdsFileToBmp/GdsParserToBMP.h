@@ -41,6 +41,7 @@ typedef struct _GDS_Element
 	// 陈列的行和列，仅element时AREF才是有效数据
 	int m_nColumns;
 	int m_nRows;
+	std::vector<GePointVector> m_vecPointAry; // 阵列展开后保存的位置
 
 	//文字字符串,仅为TEXT时有用
 	CString m_strTextString;
